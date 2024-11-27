@@ -8,6 +8,14 @@ function set_reverse_proxy(r, conn)
   local protocol = (r.headers_in['Upgrade'] and "ws://" or "http://")
 
 
+  -- if the port is an odd number, upgrade to use secure sockets
+  local port = r.subprocess_env['MATCH_PORT']
+  if port then
+    if port % 2 ~= 0 then
+      protocol = (r.headers_in['Upgrade'] and "wss://" or "https://")
+    end
+  end
+
   -- define reverse proxy destination using connection object
   if conn.socket then
     r.handler = "proxy:unix:" .. conn.socket .. "|" .. protocol .. "localhost"
